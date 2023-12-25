@@ -1,6 +1,9 @@
 ## Brainfuck Compiler/Interpreter
+
 When completed this is supposed to be able to interpret brainfuck code as well as compiling it to native code.
+
 ### Brainfuck Specification
+
 | Instruction | Definition                                                                                                                                                                         |
 |-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | \>          | 	Increment the data pointer by one (to point to the next cell to the right).                                                                                                       |

@@ -11,5 +11,3 @@ enum Lexeme:
   case JumpBackwardEqualZero
   // TODO: Remove this
   case Empty
-
- 
