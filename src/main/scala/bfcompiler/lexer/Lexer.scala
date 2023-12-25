@@ -16,32 +16,50 @@ trait Lexer:
 
 object Lexer {
   val default: Lexer = new Lexer:
+    extension (xs: List[ValidatedNel[LexerError, Token]])
+      def prependToken(token: Token): List[ValidatedNel[LexerError, Token]] =
+        Validated.valid(token) +: xs
+
     def lexLine(line: String, lineIndex: Int, filePath: Path): LexerResult =
-      val parsed = line.toList.zipWithIndex.map { case (value, column) =>
-        val location = Location(filePath, lineIndex, column)
-        value match
-          case '>' => Validated.valid(common.Token(Lexeme.IncrementDataPointer, location))
-          case '<' => Validated.valid(common.Token(Lexeme.DecrementDataPointer, location))
-          case '+' => Validated.valid(common.Token(Lexeme.Increment, location))
-          case '-' => Validated.valid(common.Token(Lexeme.Decrement, location))
-          case '.' => Validated.valid(common.Token(Lexeme.Write, location))
-          case ',' => Validated.valid(common.Token(Lexeme.Read, location))
-          case '[' => Validated.valid(common.Token(Lexeme.JumpForwardEqualZero, location))
-          case ']' =>
-            Validated.valid(common.Token(Lexeme.JumpBackwardEqualZero, location))
-          case ' '        => Validated.valid(common.Token(Lexeme.Empty, location))
-          case _ @invalid => Validated.invalidNel(LexerError.InvalidToken(invalid, location))
-      }
-      parsed.sequence
+      val parsed = line
+        .split("//", 2)(0) // Ignore comments
+        .toList
+        .zipWithIndex
+        .foldLeft(List.empty[ValidatedNel[LexerError, Token]]) {
+          case (acc, (value, column)) =>
+            val location = Location(filePath, lineIndex, column)
+            value match
+              case '>' =>
+                acc prependToken Token(Lexeme.IncrementDataPointer, location)
+              case '<' =>
+                acc prependToken Token(Lexeme.DecrementDataPointer, location)
+              case '+' => acc prependToken Token(Lexeme.Increment, location)
+              case '-' => acc prependToken Token(Lexeme.Decrement, location)
+              case '.' => acc prependToken Token(Lexeme.Write, location)
+              case ',' => acc prependToken Token(Lexeme.Read, location)
+              case '[' =>
+                acc prependToken Token(Lexeme.JumpForwardEqualZero, location)
+              case ']' =>
+                acc prependToken Token(Lexeme.JumpBackwardEqualZero, location)
+              case ' ' => acc
+              case _ @invalid =>
+                Validated.invalidNel(
+                  LexerError.InvalidToken(invalid, location)
+                ) +: acc
+        }
+      parsed.reverse.sequence
 
     override def lexFile(path: Path): LexerResult =
       val lexed =
-        for source <- Try(scala.io.Source.fromFile(path.toFile)).toEither.toValidated
+        for source <- Try(
+            scala.io.Source.fromFile(path.toFile)
+          ).toEither.toValidated
         yield source.getLines().toList.zipWithIndex.map { case (line, index) =>
           lexLine(line, index, path)
         }
       lexed match
         case Validated.Valid(tokens) => tokens.sequence.map(_.flatten)
-        case Validated.Invalid(e) => Validated.invalidNel(LexerError.IOError(path, e))
+        case Validated.Invalid(e) =>
+          Validated.invalidNel(LexerError.IOError(path, e))
 
 }
