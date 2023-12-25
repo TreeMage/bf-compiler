@@ -4,14 +4,15 @@ import bfcompiler.common.Token
 import bfcompiler.common.Program
 import bfcompiler.intermediate.{Operation, OperationType}
 import bfcompiler.lexer.Lexeme.{Decrement, DecrementDataPointer, Empty, Increment, IncrementDataPointer, JumpBackwardEqualZero, JumpForwardEqualZero, Read, Write}
+import cats.implicits._
 
 trait Interpreter:
-  def run(program: Program): Unit
+  def run(program: Program): Either[InterpreterError, Unit]
 
 object Interpreter:
   val default: Interpreter = new Interpreter:
     val MEMORY_SIZE = 30_000
-    override def run(program: Program): Unit =
+    override def run(program: Program): Either[InterpreterError, Unit] =
       var ip = 0
       var dp = 0
       val data = Array.fill[Byte](MEMORY_SIZE)(0)
@@ -20,9 +21,11 @@ object Interpreter:
         operation.op match
           case OperationType.IncrementDataPointer =>
             dp = dp + 1
+            if (dp >= data.length) return InterpreterError.DataPointerOutOfBounds(dp, operation).asLeft
             ip = ip + 1
           case OperationType.DecrementDataPointer =>
             dp = dp - 1
+            if (dp < 0) return InterpreterError.DataPointerOutOfBounds(dp, operation).asLeft
             ip = ip + 1
           case OperationType.Increment =>
             data(dp) = ((data(dp) + 1) % 255).toByte
@@ -44,6 +47,8 @@ object Interpreter:
             else ip = ip + 1
           case OperationType.Noop =>
             ip = ip + 1
+
+      ().asRight
 
 
 

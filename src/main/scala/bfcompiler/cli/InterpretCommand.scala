@@ -24,13 +24,21 @@ object InterpretCommand:
     header = "Interprets the given file."
   )(interpretOptions.map(config =>
     Lexer.default.lexFile(config.sourcePath) match
-      case Left(errors) => ErrorReporting.reportLexerErrors(errors)
+      case Left(errors) =>
+        ErrorReporting.reportLexerErrors(errors)
+        sys.exit(1)
       case Right(tokens) =>
         IntermediateCompiler.default.compile(tokens) match
-          case Left(errors) => ErrorReporting.reportIntermediateCompilationErrors(errors)
+          case Left(errors) =>
+            ErrorReporting.reportIntermediateCompilationErrors(errors)
+            sys.exit(1)
           case Right(program) =>
             if (config.debug) println(program.asTree)
-            Interpreter.default.run(program)
+            Interpreter.default.run(program) match
+              case Left(error) =>
+                ErrorReporting.reportInterpretationError(error)
+                sys.exit(1)
+              case Right(_) => ()
   )))
 
 

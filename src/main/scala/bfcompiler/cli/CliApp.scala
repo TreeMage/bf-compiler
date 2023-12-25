@@ -7,7 +7,7 @@ import scala.language.postfixOps
 object CliApp {
   private val command = Command(
     name = "bf-compiler",
-    header = "A brainfuck interpreter and compiler in Scala 3."
+    header = "A brainfuck interpreter and compiler written in Scala 3."
   )(
     InterpretCommand.command
   )
