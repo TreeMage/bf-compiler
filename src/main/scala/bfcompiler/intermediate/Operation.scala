@@ -1,7 +1,6 @@
 package bfcompiler.intermediate
 
 import bfcompiler.common.Location
-import bfcompiler.lexer.OperationType
 
 enum OperationType:
   case IncrementDataPointer

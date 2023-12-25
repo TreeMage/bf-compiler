@@ -4,6 +4,7 @@ import bfcompiler.intermediate.IntermediateCompiler
 import bfcompiler.interpreter.Interpreter
 import bfcompiler.lexer.Lexer
 import bfcompiler.util.ErrorReporting
+import cats.data.Validated
 import cats.implicits.*
 import com.monovore.decline.{Command, Opts}
 
@@ -19,15 +20,15 @@ object InterpretCommand:
     )(
       interpretOptions.map(config =>
         Lexer.default.lexFile(config.sourcePath) match
-          case Left(errors) =>
+          case Validated.Invalid(errors) =>
             ErrorReporting.reportLexerErrors(errors)
             sys.exit(1)
-          case Right(tokens) =>
+          case Validated.Valid(tokens) =>
             IntermediateCompiler.default.compile(tokens) match
-              case Left(errors) =>
+              case Validated.Invalid(errors) =>
                 ErrorReporting.reportIntermediateCompilationErrors(errors)
                 sys.exit(1)
-              case Right(program) =>
+              case Validated.Valid(program) =>
                 if (config.debug) println(program.asTree)
                 Interpreter.default.run(program) match
                   case Left(error) =>

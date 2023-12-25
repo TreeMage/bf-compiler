@@ -4,9 +4,11 @@ import bfcompiler.intermediate.IntermediateCompilationError
 import bfcompiler.interpreter.InterpreterError
 import bfcompiler.lexer.LexerError
 
+import cats.data.NonEmptyList
+
 object ErrorReporting {
 
-  def reportLexerErrors(errors: List[LexerError]): Unit =
+  def reportLexerErrors(errors: NonEmptyList[LexerError]): Unit =
     reportErrorsGeneric(
       errors,
       "Lexing failed due to the following issue(s):"
@@ -17,19 +19,23 @@ object ErrorReporting {
         s"${location.toStringLocation} Encountered invalid token '$value'."
     }
 
-  private def reportErrorsGeneric[A](errors: List[A], header: String = "")(
+  private def reportErrorsGeneric[A](
+      errors: NonEmptyList[A],
+      header: String = ""
+  )(
       formatter: A => String
   ): Unit =
     if (!header.isBlank)
       Console.err.println(header)
-    errors.zipWithIndex.foreach { case (error, index) =>
+    val messages = errors.zipWithIndex.foldLeft(List.empty[String]) { case (acc,(error, index)) =>
       val adjustedIndex = index + 1
       val errorMessage  = s"\t$adjustedIndex. ${formatter(error)}"
-      Console.err.println(errorMessage)
-    }
+      errorMessage +: acc
+    }.reverse
+    Console.err.println(messages.mkString("\n"))
 
   def reportIntermediateCompilationErrors(
-      errors: List[IntermediateCompilationError]
+      errors: NonEmptyList[IntermediateCompilationError]
   ): Unit =
     reportErrorsGeneric(
       errors,
@@ -42,7 +48,7 @@ object ErrorReporting {
     }
 
   def reportInterpretationError(error: InterpreterError): Unit =
-    reportErrorsGeneric(List(error), "Interpretation of the program failed") {
+    reportErrorsGeneric(NonEmptyList.one(error), "Interpretation of the program failed") {
       case InterpreterError.DataPointerOutOfBounds(index, cause) =>
         s"""Data pointer is out of bounds (pointing at index $index). The offending instruction is ${cause.op} at ${cause.location.toStringLocation}"""
     }
