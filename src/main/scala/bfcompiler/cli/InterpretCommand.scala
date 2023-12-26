@@ -18,7 +18,7 @@ object InterpretCommand:
       name = "interpret",
       header = "Interprets the given file."
     )(
-      interpretOptions.map(config =>
+      options.map(config =>
         Lexer.default.lexFile(config.sourcePath) match
           case Validated.Invalid(errors) =>
             ErrorReporting.reportLexerErrors(errors)
@@ -38,7 +38,7 @@ object InterpretCommand:
       )
     )
   )
-  private val interpretOptions: Opts[InterpretConfig] = (
+  private val options: Opts[InterpretConfig] = (
     Opts.argument[Path](metavar = "source file").map(_.toAbsolutePath),
     Opts.flag(long = "debug", help = "Enable debug output").orFalse
   ).mapN { case (path, debug) =>

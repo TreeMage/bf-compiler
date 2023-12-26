@@ -1,3 +1,5 @@
+asm/
+out/
 # macOS
 .DS_Store
 

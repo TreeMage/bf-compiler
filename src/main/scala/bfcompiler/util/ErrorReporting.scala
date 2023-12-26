@@ -1,12 +1,30 @@
 package bfcompiler.util
 
+import bfcompiler.cli.CompileCommand.NativeCompilationError
 import bfcompiler.intermediate.IntermediateCompilationError
 import bfcompiler.interpreter.InterpreterError
 import bfcompiler.lexer.LexerError
-
+import bfcompiler.native.{AssemblerError, LinkerError}
 import cats.data.NonEmptyList
 
 object ErrorReporting {
+
+  private def reportErrorsGeneric[A](
+      errors: NonEmptyList[A],
+      header: String = ""
+  )(
+      formatter: A => String
+  ): Unit =
+    if (!header.isBlank)
+      Console.err.println(header)
+    val messages = errors.zipWithIndex
+      .foldLeft(List.empty[String]) { case (acc, (error, index)) =>
+        val adjustedIndex = index + 1
+        val errorMessage  = s"\t$adjustedIndex. ${formatter(error)}"
+        errorMessage +: acc
+      }
+      .reverse
+    Console.err.println(messages.mkString("\n"))
 
   def reportLexerErrors(errors: NonEmptyList[LexerError]): Unit =
     reportErrorsGeneric(
@@ -18,22 +36,6 @@ object ErrorReporting {
       case LexerError.InvalidToken(value, location) =>
         s"${location.toStringLocation} Encountered invalid token '$value'."
     }
-
-  private def reportErrorsGeneric[A](
-      errors: NonEmptyList[A],
-      header: String = ""
-  )(
-      formatter: A => String
-  ): Unit =
-    if (!header.isBlank)
-      Console.err.println(header)
-    val messages = errors.zipWithIndex.foldLeft(List.empty[String]) { case (acc,(error, index)) =>
-      val adjustedIndex = index + 1
-      val errorMessage  = s"\t$adjustedIndex. ${formatter(error)}"
-      errorMessage +: acc
-    }.reverse
-    Console.err.println(messages.mkString("\n"))
-
   def reportIntermediateCompilationErrors(
       errors: NonEmptyList[IntermediateCompilationError]
   ): Unit =
@@ -48,8 +50,36 @@ object ErrorReporting {
     }
 
   def reportInterpretationError(error: InterpreterError): Unit =
-    reportErrorsGeneric(NonEmptyList.one(error), "Interpretation of the program failed") {
-      case InterpreterError.DataPointerOutOfBounds(index, cause) =>
-        s"""Data pointer is out of bounds (pointing at index $index). The offending instruction is ${cause.op} at ${cause.location.toStringLocation}"""
+    reportErrorsGeneric(
+      NonEmptyList.one(error),
+      "Interpretation of the program failed due to the following issue:"
+    ) { case InterpreterError.DataPointerOutOfBounds(index, cause) =>
+      s"""Data pointer is out of bounds (pointing at index $index). The offending instruction is ${cause.op} at ${cause.location.toStringLocation}"""
     }
+
+  private def reportAssemblerError(error: AssemblerError): Unit =
+    reportErrorsGeneric(
+      NonEmptyList.one(error),
+      "Assembly of the program failed due to the following issue:"
+    ) {
+      case AssemblerError.IOError(cause) =>
+        s"An error occurred while writing the genreated assembly to disk.\n $cause"
+      case AssemblerError.AssemblingFailed(cause) =>
+        s"The program could not be assembled due to the following assembler error:\n $cause"
+    }
+
+  private def reportLinkerError(error: LinkerError): Unit =
+    reportErrorsGeneric(
+      NonEmptyList.one(error),
+      "Linking of the program failed due to the following issue:"
+    ) { case LinkerError.LinkingFailed(cause) =>
+      cause.toString
+    }
+
+  def reportNativeCompilationError(error: NativeCompilationError): Unit =
+    error match
+      case assemblerError: AssemblerError =>
+        reportAssemblerError(assemblerError)
+      case linkerError: LinkerError =>
+        reportLinkerError(linkerError)
 }

@@ -9,7 +9,7 @@ object CliApp {
     name = "bf-compiler",
     header = "A brainfuck interpreter and compiler written in Scala 3."
   )(
-    InterpretCommand.command
+    InterpretCommand.command orElse CompileCommand.command
   )
   def run(args: Seq[String], env: Map[String, String]): Unit =
     command.parse(args, env) match
