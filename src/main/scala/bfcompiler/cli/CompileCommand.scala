@@ -10,16 +10,14 @@ import bfcompiler.native.{
   LinkerError,
   NativeCompiler
 }
-import bfcompiler.util.ErrorReporting
+import bfcompiler.util.{ErrorReporting, Logging}
 import cats.data.Validated
 import com.monovore.decline.{Command, Opts}
 import cats.implicits.*
 
-import java.io.PrintWriter
+import sys.process.Process
 import java.nio.file.Path
 import scala.language.postfixOps
-import scala.util.Using
-import scala.sys.process.*
 
 case class CompileConfig(
     sourcePath: Path,
@@ -75,7 +73,14 @@ object CompileCommand:
                 compilationResult match
                   case Left(error) =>
                     ErrorReporting.reportNativeCompilationError(error)
-                  case _ => ()
+                  case _ =>
+                    if (config.run)
+                      val command = executableFilePath.toString
+                      Logging.commandExecution(command)
+                      val exitCode = Process(executableFilePath.toString).!
+                      println(
+                        s"[INFO] Process finished with exit code $exitCode"
+                      )
       )
     )
   )
