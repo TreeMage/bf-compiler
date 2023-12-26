@@ -1,5 +1,5 @@
 repos:
   - repo: "."
-    rev: d0b9dc30f5c7ce07ef25360533f683b71a24347c
+    rev: 82ef400900a1ec03bcad3a8e04069cebc28bb8a3
     hooks:
       - id: scalafmt
