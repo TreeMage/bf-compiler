@@ -19,8 +19,8 @@ object NativeCompiler:
          |    str x0, [sp, -16]!""".stripMargin
     private val data =
       s""".data
-        |buf:
-        |   .zero 2
+        |fmt:
+        |   .ascii "%hu\\n"
         |mem:
         |   .zero $MEMORY_CAPACITY""".stripMargin
     private val exitSyscall =
@@ -28,8 +28,9 @@ object NativeCompiler:
          |    mov x0, #0
          |    mov x16, #1
          |    svc 0""".stripMargin
-    private def push(operand: String) = s"str $operand, [sp, -16]!"
-    private def pop(operand: String)  = s"ldr $operand, [sp], 16"
+    private def push(operand: String)       = s"str $operand, [sp, -16]!"
+    private def pop(operand: String)        = s"ldr $operand, [sp], 16"
+    private def getDPFromStack(reg: String) = s"ldr $reg, [sp]"
     override def compile(program: Program): String =
       val buffer = collection.mutable.ListBuffer.empty[String]
       val finalLabel =
@@ -50,33 +51,39 @@ object NativeCompiler:
                |${push("x0")}""".stripMargin
           case OperationType.Increment =>
             s"""// Increment
-               |${pop("x0")}
+               |${getDPFromStack("x0")}
                |ldr x1, [x0]
                |add x1, x1, #1
-               |str x1, [x0]
-               |${push("x0")}""".stripMargin
+               |str x1, [x0]""".stripMargin
           case OperationType.Decrement =>
             s"""// Decrement
-               |${pop("x0")}
+               |${getDPFromStack("x0")}
                |ldr x1, [x0]
                |sub x1, x1, #1
-               |str x1, [x0]
-               |${push("x0")}""".stripMargin
+               |str x1, [x0]""".stripMargin
           case OperationType.Write =>
-            throw new NotImplementedError
+            s"""// Write
+               |${getDPFromStack("x1")}
+               |sub sp, sp, 0x10        ; Reserve 16 bytes on the stack
+               |ldr x2, [x1]            ; Load value at current data pointer
+               |str x2, [sp]            ; Store on stack
+               |adrp x0, fmt@PAGE       ; Load format string
+               |add x0, x0, fmt@PAGEOFF
+               |bl _printf              ; Call printf
+               |
+               |add sp, sp, 0x10        ; Release stack space
+               |""".stripMargin
           case OperationType.Read =>
             throw new NotImplementedError
           case OperationType.JumpForwardEqualZero(targetAddress) =>
             s"""// Jump Forward
-               |${pop("x0")}
-               |${push("x0")}
+               |${getDPFromStack("x0")}
                |ldr x1, [x0]
                |cbz x1, addr_${targetAddress + 1}
                """.stripMargin
           case OperationType.JumpBackwardEqualZero(targetAddress) =>
             s"""// Jump Backward
-               |${pop("x0")}
-               |${push("x0")}
+               |${getDPFromStack("x0")}
                |ldr x1, [x0]
                |cbnz x1, addr_${targetAddress + 1}
                """.stripMargin
