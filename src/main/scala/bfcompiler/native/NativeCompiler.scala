@@ -19,8 +19,10 @@ object NativeCompiler:
          |    str x0, [sp, -16]!""".stripMargin
     private val data =
       s""".data
-        |fmt:
+        |printf_fmt:
         |   .ascii "%hu\\n"
+        |scanf_fmt:
+        |   .ascii "%hu"
         |mem:
         |   .zero $MEMORY_CAPACITY""".stripMargin
     private val exitSyscall =
@@ -64,17 +66,26 @@ object NativeCompiler:
           case OperationType.Write =>
             s"""// Write
                |${getDPFromStack("x1")}
-               |sub sp, sp, 0x10        ; Reserve 16 bytes on the stack
-               |ldr x2, [x1]            ; Load value at current data pointer
-               |str x2, [sp]            ; Store on stack
-               |adrp x0, fmt@PAGE       ; Load format string
-               |add x0, x0, fmt@PAGEOFF
-               |bl _printf              ; Call printf
+               |sub sp, sp, 0x10                ; Reserve 16 bytes on the stack
+               |ldr x2, [x1]                    ; Load value at current data pointer
+               |str x2, [sp]                    ; Store on stack
+               |adrp x0, printf_fmt@PAGE        ; Load format string
+               |add x0, x0, printf_fmt@PAGEOFF
+               |bl _printf                      ; Call printf
                |
-               |add sp, sp, 0x10        ; Release stack space
+               |add sp, sp, 0x10                ; Release stack space
                |""".stripMargin
           case OperationType.Read =>
-            throw new NotImplementedError
+            s"""${getDPFromStack("x19")}
+               |adrp x0, scanf_fmt@PAGE       ; Load format string
+               |add x0, x0, scanf_fmt@PAGEOFF
+               |mov x1, x19
+               |bl _scanf                     ; Call scanf (pointer to buffer in x1)
+               |ldr x0, [x19]
+               |mov x1, #255
+               |and x0, x1, x0                ; Clamp value to [0, 255]
+               |str x0, [x19]
+               |""".stripMargin
           case OperationType.JumpForwardEqualZero(targetAddress) =>
             s"""// Jump Forward
                |${getDPFromStack("x0")}
