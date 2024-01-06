@@ -2,9 +2,18 @@ package bfcompiler.common
 
 import java.nio.file.Path
 
-case class Location(filePath: Path, line: Int, column: Int)
+enum Location:
+  case Local(line: Int, column: Int)
+  case File(line: Int, column: Int, path: Path)
 
 object Location:
+  extension (ll: Location.Local)
+    def inFile(path: Path): Location.File =
+      Location.File(ll.line, ll.column, path)
+
+  end extension
   extension (location: Location)
-    def toStringLocation: String =
-      s"${location.filePath}:${location.line}:${location.column}"
+    def asString: String = location match
+      case Location.Local(line, column)      => s"${line}:${column}"
+      case Location.File(line, column, path) => s"${path}:${line}:${column}"
+  end extension

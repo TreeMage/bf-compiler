@@ -9,6 +9,6 @@ object Program:
     def asTree: String =
       program.ops.zipWithIndex
         .map { (op, index) =>
-          s"$index. ${op.op} (${op.location.toStringLocation})"
+          s"$index. ${op.op} (${op.location.asString})"
         }
         .mkString("\n")

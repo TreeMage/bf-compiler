@@ -3,7 +3,7 @@ package bfcompiler.cli
 import bfcompiler.intermediate.IntermediateCompiler
 import bfcompiler.interpreter.Interpreter
 import bfcompiler.lexer.Lexer
-import bfcompiler.util.ErrorReporting
+import bfcompiler.util.{ErrorReporting, FileIO}
 import cats.data.Validated
 import cats.implicits.*
 import com.monovore.decline.{Command, Opts}
@@ -19,22 +19,27 @@ object InterpretCommand:
       header = "Interprets the given file."
     )(
       options.map(config =>
-        Lexer.default.lexFile(config.sourcePath) match
-          case Validated.Invalid(errors) =>
-            ErrorReporting.reportLexerErrors(errors)
+        FileIO.readAllLines(config.sourcePath) match
+          case Left(error) =>
+            ErrorReporting.reportIOError(error)
             sys.exit(1)
-          case Validated.Valid(tokens) =>
-            IntermediateCompiler.default.compile(tokens) match
+          case Right(lines) =>
+            Lexer.default.lex(lines) match
               case Validated.Invalid(errors) =>
-                ErrorReporting.reportIntermediateCompilationErrors(errors)
+                ErrorReporting.reportLexerErrors(errors)
                 sys.exit(1)
-              case Validated.Valid(program) =>
-                if (config.debug) println(program.asTree)
-                Interpreter.default.run(program) match
-                  case Left(error) =>
-                    ErrorReporting.reportInterpretationError(error)
+              case Validated.Valid(tokens) =>
+                IntermediateCompiler.default.compile(tokens) match
+                  case Validated.Invalid(errors) =>
+                    ErrorReporting.reportIntermediateCompilationErrors(errors)
                     sys.exit(1)
-                  case Right(_) => ()
+                  case Validated.Valid(program) =>
+                    if (config.debug) println(program.asTree)
+                    Interpreter.default.run(program) match
+                      case Left(error) =>
+                        ErrorReporting.reportInterpretationError(error)
+                        sys.exit(1)
+                      case Right(_) => ()
       )
     )
   )

@@ -1,5 +1,4 @@
 package bfcompiler.intermediate
-import cats.implicits.*
 import bfcompiler.common.{Location, Program, Token}
 import bfcompiler.lexer.Lexeme.*
 import cats.data.{NonEmptyList, Validated, ValidatedNel}

@@ -2,14 +2,13 @@ package bfcompiler.native
 
 import bfcompiler.common.Program
 import bfcompiler.util.Logging
-
-import java.nio.file.Path
-import scala.language.postfixOps
-import scala.util.{Failure, Success, Try, Using}
-import sys.process.*
 import cats.implicits.*
 
 import java.io.PrintWriter
+import java.nio.file.Path
+import scala.language.postfixOps
+import scala.sys.process.*
+import scala.util.{Failure, Success, Try, Using}
 
 enum AssemblerError:
   case IOError(cause: Throwable)

@@ -2,8 +2,8 @@ package bfcompiler.native
 
 import bfcompiler.util.Logging
 
-import sys.process.*
 import java.nio.file.Path
+import scala.sys.process.*
 import scala.util.Try
 
 enum LinkerError:

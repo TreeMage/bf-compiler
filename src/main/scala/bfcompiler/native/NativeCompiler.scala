@@ -82,8 +82,7 @@ object NativeCompiler:
                |mov x1, x19
                |bl _scanf                     ; Call scanf (pointer to buffer in x1)
                |ldr x0, [x19]
-               |mov x1, #255
-               |and x0, x1, x0                ; Clamp value to [0, 255]
+               |and x0, x0, #0xFF             ; Clamp value to [0, 255]
                |str x0, [x19]
                |""".stripMargin
           case OperationType.JumpForwardEqualZero(targetAddress) =>
