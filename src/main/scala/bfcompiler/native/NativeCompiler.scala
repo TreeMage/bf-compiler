@@ -7,6 +7,7 @@ trait NativeCompiler:
   def compile(program: Program): String
 
 object NativeCompiler:
+  private lazy val MEMORY_CAPACITY = 64_000
   val arm: NativeCompiler = new NativeCompiler:
     private val header =
       """.global _start
@@ -108,4 +109,3 @@ object NativeCompiler:
         .append(exitSyscall)
         .append(data)
         .mkString("\n")
-  private val MEMORY_CAPACITY = 64_000
