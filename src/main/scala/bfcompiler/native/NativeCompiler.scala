@@ -91,7 +91,7 @@ object NativeCompiler:
                |ldr x1, [x0]
                |cbz x1, addr_${targetAddress + 1}
                """.stripMargin
-          case OperationType.JumpBackwardEqualZero(targetAddress) =>
+          case OperationType.JumpBackwardNotEqualZero(targetAddress) =>
             s"""// Jump Backward
                |${getDPFromStack("x0")}
                |ldr x1, [x0]

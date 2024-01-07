@@ -47,7 +47,7 @@ object Interpreter:
           case OperationType.JumpForwardEqualZero(targetAddress) =>
             if (data(dp) == 0) ip = targetAddress + 1
             else ip = ip + 1
-          case OperationType.JumpBackwardEqualZero(targetAddress) =>
+          case OperationType.JumpBackwardNotEqualZero(targetAddress) =>
             if (data(dp) != 0) ip = targetAddress + 1
             else ip = ip + 1
           case OperationType.Noop =>

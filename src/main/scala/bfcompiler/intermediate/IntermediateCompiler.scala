@@ -34,7 +34,7 @@ object IntermediateCompiler:
         token.lexeme match
           case JumpForwardEqualZero =>
             ((index, token.location) +: stack, acc, errors)
-          case JumpBackwardEqualZero =>
+          case JumpBackwardNotEqualZero =>
             stack.headOption match
               case Some((startIndex, _)) =>
                 (stack.tail, (startIndex, index) +: acc, errors)
@@ -54,7 +54,7 @@ object IntermediateCompiler:
       }
       NonEmptyList.fromList(combined_errors) match
         case Some(errors) => Validated.invalid(errors)
-        case None         => Validated.validNel(acc.reverse)
+        case None         => Validated.validNel(acc)
 
     override def compile(tokens: List[Token]): IntermediateCompilationResult =
       matchLoopTokens(tokens) match
@@ -113,12 +113,8 @@ object IntermediateCompiler:
                     startIndexStack,
                     acc.addSimpleToken(OperationType.Write, token.location)
                   )
-                case Empty =>
-                  throw new IllegalStateException(
-                    "Empty tokens should have been eliminated. This is a bug in the lexer."
-                  )
                 case JumpForwardEqualZero =>
-                  val (start, end) = loopPairings.head
+                  val (start, end) = pairingStack.head
                   (
                     pairingStack.tail,
                     start +: startIndexStack,
@@ -127,13 +123,13 @@ object IntermediateCompiler:
                       token.location
                     )
                   )
-                case JumpBackwardEqualZero =>
+                case JumpBackwardNotEqualZero =>
                   val start = startIndexStack.head
                   (
                     pairingStack,
                     startIndexStack.tail,
                     acc.addSimpleToken(
-                      OperationType.JumpBackwardEqualZero(start),
+                      OperationType.JumpBackwardNotEqualZero(start),
                       token.location
                     )
                   )

@@ -37,7 +37,10 @@ object Lexer {
               case '[' =>
                 acc prependToken Token(Lexeme.JumpForwardEqualZero, location)
               case ']' =>
-                acc prependToken Token(Lexeme.JumpBackwardEqualZero, location)
+                acc prependToken Token(
+                  Lexeme.JumpBackwardNotEqualZero,
+                  location
+                )
               case ' ' => acc
               case _ @invalid =>
                 Validated.invalidNel(

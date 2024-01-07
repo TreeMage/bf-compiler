@@ -5,6 +5,7 @@ import bfcompiler.intermediate.IntermediateCompilationError
 import bfcompiler.interpreter.InterpreterError
 import bfcompiler.lexer.LexerError
 import bfcompiler.native.{AssemblerError, LinkerError}
+import bfcompiler.util.FileIO.IOError
 import cats.data.NonEmptyList
 
 object ErrorReporting {
@@ -19,6 +20,23 @@ object ErrorReporting {
       case LexerError.InvalidToken(value, location) =>
         s"${location.asString} Encountered invalid token '$value'."
     }
+
+  private def reportErrorsGeneric[A](
+      errors: NonEmptyList[A],
+      header: String = ""
+  )(
+      formatter: A => String
+  ): Unit =
+    if (!header.isBlank)
+      Console.err.println(header)
+    val messages = errors.zipWithIndex
+      .foldLeft(List.empty[String]) { case (acc, (error, index)) =>
+        val adjustedIndex = index + 1
+        val errorMessage  = s"\t$adjustedIndex. ${formatter(error)}"
+        errorMessage +: acc
+      }
+      .reverse
+    Console.err.println(messages.mkString("\n"))
 
   def reportIntermediateCompilationErrors(
       errors: NonEmptyList[IntermediateCompilationError]
@@ -67,23 +85,8 @@ object ErrorReporting {
       cause.toString
     }
 
-  private def reportErrorsGeneric[A](
-      errors: NonEmptyList[A],
-      header: String = ""
-  )(
-      formatter: A => String
-  ): Unit =
-    if (!header.isBlank)
-      Console.err.println(header)
-    val messages = errors.zipWithIndex
-      .foldLeft(List.empty[String]) { case (acc, (error, index)) =>
-        val adjustedIndex = index + 1
-        val errorMessage  = s"\t$adjustedIndex. ${formatter(error)}"
-        errorMessage +: acc
-      }
-      .reverse
-    Console.err.println(messages.mkString("\n"))
-
-  def reportIOError(error: Throwable): Unit =
-    Console.err.println(s"An IO error occurred: $error")
+  def reportIOError(error: IOError): Unit =
+    Console.err.println(
+      s"An error occurred while trying to read ${error.path}. Caused by: ${error.cause}"
+    )
 }

@@ -5,7 +5,9 @@ import java.nio.file.Path
 import scala.util.Using
 
 object FileIO:
-  def readAllLines(path: Path): Either[Throwable, List[String]] =
+  def readAllLines(path: Path): Either[IOError, List[String]] =
     Using(scala.io.BufferedSource(new FileInputStream(path.toFile)))(
       _.getLines().toList
-    ).toEither
+    ).toEither.left.map(cause => IOError(cause, path))
+
+  case class IOError(cause: Throwable, path: Path)

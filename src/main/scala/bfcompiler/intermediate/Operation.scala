@@ -10,7 +10,7 @@ enum OperationType:
   case Write
   case Read
   case JumpForwardEqualZero(targetAddress: Int)
-  case JumpBackwardEqualZero(targetAddress: Int)
+  case JumpBackwardNotEqualZero(targetAddress: Int)
   case Noop
 
 case class Operation(op: OperationType, location: Location)

@@ -8,6 +8,4 @@ enum Lexeme:
   case Write
   case Read
   case JumpForwardEqualZero
-  case JumpBackwardEqualZero
-  // TODO: Remove this
-  case Empty
+  case JumpBackwardNotEqualZero
