@@ -29,10 +29,10 @@ class IntermediateCompilerSuite extends munit.FunSuite:
       Validated.valid(
         Program(
           List(
-            Operation(OperationType.IncrementDataPointer, dummyLocation),
-            Operation(OperationType.DecrementDataPointer, dummyLocation),
-            Operation(OperationType.Increment, dummyLocation),
-            Operation(OperationType.Decrement, dummyLocation),
+            Operation(OperationType.IncrementDataPointer(1), dummyLocation),
+            Operation(OperationType.DecrementDataPointer(1), dummyLocation),
+            Operation(OperationType.Increment(1), dummyLocation),
+            Operation(OperationType.Decrement(1), dummyLocation),
             Operation(OperationType.Read, dummyLocation),
             Operation(OperationType.Write, dummyLocation),
             Operation(OperationType.JumpForwardEqualZero(7), dummyLocation),
@@ -56,7 +56,7 @@ class IntermediateCompilerSuite extends munit.FunSuite:
         Program(
           List(
             Operation(OperationType.JumpForwardEqualZero(2), dummyLocation),
-            Operation(OperationType.Increment, dummyLocation),
+            Operation(OperationType.Increment(1), dummyLocation),
             Operation(OperationType.JumpBackwardNotEqualZero(0), dummyLocation)
           )
         )
@@ -81,11 +81,11 @@ class IntermediateCompilerSuite extends munit.FunSuite:
         Program(
           List(
             Operation(OperationType.JumpForwardEqualZero(6), dummyLocation),
-            Operation(OperationType.Increment, dummyLocation),
+            Operation(OperationType.Increment(1), dummyLocation),
             Operation(OperationType.JumpForwardEqualZero(4), dummyLocation),
-            Operation(OperationType.Increment, dummyLocation),
+            Operation(OperationType.Increment(1), dummyLocation),
             Operation(OperationType.JumpBackwardNotEqualZero(2), dummyLocation),
-            Operation(OperationType.Increment, dummyLocation),
+            Operation(OperationType.Increment(1), dummyLocation),
             Operation(OperationType.JumpBackwardNotEqualZero(0), dummyLocation)
           )
         )

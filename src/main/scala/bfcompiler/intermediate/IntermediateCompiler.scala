@@ -70,7 +70,7 @@ object IntermediateCompiler:
                     pairingStack,
                     startIndexStack,
                     acc.addSimpleToken(
-                      OperationType.IncrementDataPointer,
+                      OperationType.IncrementDataPointer(1),
                       token.location
                     )
                   )
@@ -79,7 +79,7 @@ object IntermediateCompiler:
                     pairingStack,
                     startIndexStack,
                     acc.addSimpleToken(
-                      OperationType.DecrementDataPointer,
+                      OperationType.DecrementDataPointer(1),
                       token.location
                     )
                   )
@@ -88,7 +88,7 @@ object IntermediateCompiler:
                     pairingStack,
                     startIndexStack,
                     acc.addSimpleToken(
-                      OperationType.Increment,
+                      OperationType.Increment(1),
                       token.location
                     )
                   )
@@ -97,7 +97,7 @@ object IntermediateCompiler:
                     pairingStack,
                     startIndexStack,
                     acc.addSimpleToken(
-                      OperationType.Decrement,
+                      OperationType.Decrement(1),
                       token.location
                     )
                   )

@@ -18,25 +18,25 @@ object Interpreter:
       while (ip < program.ops.length)
         val operation = program.ops(ip)
         operation.op match
-          case OperationType.IncrementDataPointer =>
-            dp = dp + 1
+          case OperationType.IncrementDataPointer(count) =>
+            dp = dp + count
             if (dp >= data.length)
               return InterpreterError
                 .DataPointerOutOfBounds(dp, operation)
                 .asLeft
             ip = ip + 1
-          case OperationType.DecrementDataPointer =>
-            dp = dp - 1
+          case OperationType.DecrementDataPointer(count) =>
+            dp = dp - count
             if (dp < 0)
               return InterpreterError
                 .DataPointerOutOfBounds(dp, operation)
                 .asLeft
             ip = ip + 1
-          case OperationType.Increment =>
-            data(dp) = ((data(dp) + 1) % 255).toByte
+          case OperationType.Increment(count) =>
+            data(dp) = ((data(dp) + count) % 255).toByte
             ip = ip + 1
-          case OperationType.Decrement =>
-            data(dp) = ((data(dp) - 1) % 255).toByte
+          case OperationType.Decrement(count) =>
+            data(dp) = ((data(dp) - count) % 255).toByte
             ip = ip + 1
           case OperationType.Write =>
             println(data(dp))
