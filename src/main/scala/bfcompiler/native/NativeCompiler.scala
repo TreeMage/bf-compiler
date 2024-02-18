@@ -42,27 +42,27 @@ object NativeCompiler:
       val assembly = program.ops.zipWithIndex.map { case (op, ip) =>
         val address_label = s"addr_$ip:"
         val instructions = op.op match
-          case OperationType.IncrementDataPointer =>
+          case OperationType.IncrementDataPointer(count) =>
             s"""// Increment data pointer
                  |${pop("x0")}
-                 |add x0, x0, #1
+                 |add x0, x0, #$count
                  |${push("x0")}""".stripMargin
-          case OperationType.DecrementDataPointer =>
+          case OperationType.DecrementDataPointer(count) =>
             s"""// Decrement data pointer
                |${pop("x0")}
-               |sub x0, x0, #1
+               |sub x0, x0, #$count
                |${push("x0")}""".stripMargin
-          case OperationType.Increment =>
+          case OperationType.Increment(count) =>
             s"""// Increment
                |${getDPFromStack("x0")}
                |ldr x1, [x0]
-               |add x1, x1, #1
+               |add x1, x1, #$count
                |str x1, [x0]""".stripMargin
-          case OperationType.Decrement =>
+          case OperationType.Decrement(count) =>
             s"""// Decrement
                |${getDPFromStack("x0")}
                |ldr x1, [x0]
-               |sub x1, x1, #1
+               |sub x1, x1, #$count
                |str x1, [x0]""".stripMargin
           case OperationType.Write =>
             s"""// Write
