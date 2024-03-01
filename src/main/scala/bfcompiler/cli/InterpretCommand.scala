@@ -3,6 +3,7 @@ package bfcompiler.cli
 import bfcompiler.intermediate.IntermediateCompiler
 import bfcompiler.interpreter.Interpreter
 import bfcompiler.lexer.Lexer
+import bfcompiler.optimizer.Optimizer
 import bfcompiler.util.{ErrorReporting, FileIO}
 import cats.data.Validated
 import cats.implicits.*
@@ -10,7 +11,7 @@ import com.monovore.decline.{Command, Opts}
 
 import java.nio.file.Path
 
-case class InterpretConfig(sourcePath: Path, debug: Boolean)
+case class InterpretConfig(sourcePath: Path, debug: Boolean, optimize: Boolean)
 
 object InterpretCommand:
   lazy val command: Opts[Unit] = Opts.subcommand(
@@ -35,7 +36,11 @@ object InterpretCommand:
                     sys.exit(1)
                   case Validated.Valid(program) =>
                     if (config.debug) println(program.asTree)
-                    Interpreter.default.run(program) match
+                    val programToInterpret =
+                      if (config.optimize)
+                        Optimizer.default.optimize(program)
+                      else program
+                    Interpreter.default.run(programToInterpret) match
                       case Left(error) =>
                         ErrorReporting.reportInterpretationError(error)
                         sys.exit(1)
@@ -45,7 +50,8 @@ object InterpretCommand:
   )
   private val options: Opts[InterpretConfig] = (
     Opts.argument[Path](metavar = "source file").map(_.toAbsolutePath),
-    Opts.flag(long = "debug", help = "Enable debug output").orFalse
-  ).mapN { case (path, debug) =>
-    InterpretConfig(path, debug)
+    Opts.flag(long = "debug", help = "Enable debug output").orFalse,
+    Opts.flag(long = "optimize", help = "Enable optimization").orFalse
+  ).mapN { case (path, debug, optimize) =>
+    InterpretConfig(path, debug, optimize)
   }

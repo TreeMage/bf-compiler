@@ -11,6 +11,9 @@ enum OperationType:
   case Read
   case JumpForwardEqualZero(targetAddress: Int)
   case JumpBackwardNotEqualZero(targetAddress: Int)
-  case Noop
 
 case class Operation(op: OperationType, location: Location)
+
+object Operation:
+  extension (op: Operation)
+    def isSame(that: Operation): Boolean = op.op.ordinal == that.op.ordinal

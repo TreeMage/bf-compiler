@@ -98,7 +98,6 @@ object NativeCompiler:
                |ldr x1, [x0]
                |cbnz x1, addr_${targetAddress + 1}
                """.stripMargin
-          case OperationType.Noop => "nop"
 
         s"$address_label\n" + instructions.indent(4)
       }

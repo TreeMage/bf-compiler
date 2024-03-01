@@ -50,7 +50,5 @@ object Interpreter:
           case OperationType.JumpBackwardNotEqualZero(targetAddress) =>
             if (data(dp) != 0) ip = targetAddress + 1
             else ip = ip + 1
-          case OperationType.Noop =>
-            ip = ip + 1
 
       ().asRight
