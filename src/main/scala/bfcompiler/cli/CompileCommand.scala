@@ -3,6 +3,7 @@ package bfcompiler.cli
 import bfcompiler.intermediate.IntermediateCompiler
 import bfcompiler.lexer.Lexer
 import bfcompiler.native.*
+import bfcompiler.optimizer.Optimizer
 import bfcompiler.util.{ErrorReporting, FileIO, Logging}
 import cats.data.Validated
 import cats.implicits.*
@@ -17,7 +18,8 @@ case class CompileConfig(
     outputPath: Path,
     run: Boolean,
     debug: Boolean,
-    assemblerCommand: String
+    assemblerCommand: String,
+    optimize: Boolean
 )
 
 object CompileCommand:
@@ -43,13 +45,18 @@ object CompileCommand:
                     sys.exit(1)
                   case Validated.Valid(program) =>
                     if (config.debug) println(program.asTree)
+                    val programToCompile =
+                      if (config.optimize)
+                        Optimizer.default.optimize(program)
+                      else
+                        program
                     val inputFileNameWithoutExtension =
                       config.sourcePath.getFileName.toString.split("\\.", 2)(0)
                     val outputDirectory = config.outputPath
                     outputDirectory.toFile.mkdir()
                     val executableFilePath =
                       outputDirectory.resolve(s"$inputFileNameWithoutExtension")
-                    val assembly = NativeCompiler.arm.compile(program)
+                    val assembly = NativeCompiler.arm.compile(programToCompile)
                     val compilationResult =
                       for
                         assemblerResult <- ExternalAssemblerWrapper.arm64macos
@@ -86,7 +93,8 @@ object CompileCommand:
     Opts.argument[Path](metavar = "output file").map(_.toAbsolutePath),
     Opts.flag("run", help = "Run the generated executable").orFalse,
     Opts.flag("debug", help = "Enable debug output").orFalse,
-    Opts.option[String]("asm", help = "Assembler executable").withDefault("as")
-  ).mapN { case (sourcePath, outputPath, run, debug, assembler) =>
-    CompileConfig(sourcePath, outputPath, run, debug, assembler)
+    Opts.option[String]("asm", help = "Assembler executable").withDefault("as"),
+    Opts.flag("optimize", help = "Enable optimization").orFalse
+  ).mapN { case (sourcePath, outputPath, run, debug, assembler, optimize) =>
+    CompileConfig(sourcePath, outputPath, run, debug, assembler, optimize)
   }
