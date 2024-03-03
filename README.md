@@ -1,4 +1,5 @@
-## Brainfuck Compiler/Interpreter
+## Brainfuck Compiler/Interpreter 
+[![Scala CI](https://github.com/TreeMage/bf-compiler/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/TreeMage/bf-compiler/actions/workflows/build.yml)
 
 When completed this is supposed to be able to interpret brainfuck code as well as compiling it to native code.
 
